@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 My Pastel Photobooth Cute 🌸</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- GIAO DIỆN TỔNG THỂ CUTE & PASTEL --- */
+        :root {
+            --primary-pink: #ff8fab;
+            --secondary-pink: #ffc2d1;
+            --bg-gradient: linear-gradient(135deg, #fff0f5 0%, #ffe5ec 100%);
+            --dark-pink: #fb6f92;
+            --text-color: #4a4a4a;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--dark-pink);
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0px #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p.subtitle {
+            color: #a37081;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .main-wrapper {
+            display: flex;
+            gap: 40px;
+            max-width: 1100px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* KHU VỰC THIẾT BỊ & ĐIỀU KHIỂN (BÊN TRÁI) */
+        .controls-section {
+            flex: 1 1 450px;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(255, 143, 171, 0.15);
+            border: 3px solid #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Khung xem trước (Camera) */
+        #preview-area {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #ffe5ec;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05), 0 4px 15px rgba(255, 143, 171, 0.1);
+            border: 4px solid var(--secondary-pink);
+        }
+
+        #video, #decoration-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 14px;
+        }
+
+        #video { transform: scaleX(-1); /* Lập gương camera */ }
+        #decoration-canvas { display: none; } /* Chỉ hiện khi chỉnh sửa */
+
+        /* Hàng nút bấm hành động */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Style nút bấm kiểu thạch bồng bềnh */
+        button {
+            font-family: 'Quicksand', sans-serif;
+            border: none;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        button:active:not(:disabled) { transform: translateY(-1px); }
+        button:disabled { background-color: #e0e0e0 !important; color: #a1a1a1 !important; cursor: not-allowed; box-shadow: none; }
+
+        .btn-capture { background-color: var(--primary-pink); color: white; }
+        .btn-capture:hover { background-color: var(--dark-pink); }
+        
+        .btn-upload { background-color: #ffe5ec; color: var(--dark-pink); border: 2px dashed var(--primary-pink); }
+        .btn-upload:hover { background-color: var(--secondary-pink); }
+        
+        .btn-reset { background-color: #b5c2ca; color: white; margin-left: auto; }
+        .btn-reset:hover { background-color: #94a3b0; }
+
+        /* BẢNG TRANG TRÍ (DECORATION PANEL) */
+        .decoration-panel {
+            width: 100%;
+            background: #fff5f7;
+            padding: 18px;
+            border-radius: 16px;
+            border: 2px solid var(--secondary-pink);
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .decoration-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--secondary-pink);
+        }
+        
+        .decor-tab {
+            background: transparent;
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 0;
+            box-shadow: none;
+            border-bottom: 3px solid transparent;
+        }
+        .decor-tab:hover { transform: none !important; box-shadow: none; color: var(--dark-pink); }
+        .decor-tab.active-tab { border-bottom: 3px solid var(--dark-pink); color: var(--dark-pink); font-weight: 700; }
+
+        .decoration-content { display: none; }
+        .decoration-content.active-content { display: block; }
+        .decoration-content h4 { margin-top: 0; margin-bottom: 12px; color: #8a5a6c; font-size: 0.95rem;}
+
+        .filters-buttons, .stickers-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .btn-filter, .btn-sticker {
+            background: white;
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            border: 1px solid #ffe5ec;
+        }
+        .btn-filter:hover, .btn-sticker:hover { background: #fff0f5; }
+        .btn-filter.active-filter, .btn-sticker.active-sticker {
+            background: var(--primary-pink);
+            color: white;
+            border-color: var(--primary-pink);
+        }
+        
+        .btn-add-decor { background-color: #9bf6ff; color: #006d77; width: 100%; margin-top: 15px; justify-content: center;}
+        .btn-add-decor:hover { background-color: #a0e8f0; }
+
+        /* THANH TRẠNG THÁI & DOWNLOAD */
+        .status-bar {
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+            color: #8a5a6c;
+            background: #fff0f5;
+            padding: 10px;
+            border-radius: 30px;
+        }
+
+        .btn-download {
+            background: linear-gradient(45deg, #ff8fab, #ffc2d1);
+            color: white;
+            font-size: 1.1rem;
+            padding: 14px 30px;
+            width: 100%;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(255, 111, 146, 0.3);
+            display: none;
+        }
+        .btn-download:hover { background: linear-gradient(45deg, #fb6f92, #ff8fab); }
+
+        /* KHU VỰC KHUNG ẢNH GHÉP (BÊN PHẢI) */
+        .booth-section {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Khung Photobooth Hàn Quốc Xinh Xắn */
+        .photobooth-frame {
+            width: 210px;
+            background-color: #ffffff;
+            padding: 20px 20px 60px 20px;
+            box-shadow: 0 15px 40px rgba(255, 143, 171, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-radius: 4px; /* Giữ vuông vắn truyền thống của ảnh film nhưng bo cực nhẹ */
+            position: relative;
+            border: 1px solid #ffe5ec;
+        }
+
+        /* Nơ trang trí gắn trên khung cho cute */
+        .photobooth-frame::before {
+            content: "🎀";
+            position: absolute;
+            top: -15px;
+            left: calc(50% - 15px);
+            font-size: 24px;
+            z-index: 10;
+        }
+
+        .photo-slot {
+            width: 210px;
+            height: 157.5px; /* Tỷ lệ 4:3 chuẩn chỉnh */
+            background-color: #fff5f7;
+            overflow: hidden;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #dcb3c0;
+            border: 1px dashed #ffc2d1;
+            font-weight: 600;
+        }
+
+        .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Thắt nút signature góc dưới hình */
+        .photobooth-frame::after {
+            content: "✨ mini booth ✨";
+            position: absolute;
+            bottom: 18px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 0.85rem;
+            color: var(--primary-pink);
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* Ẩn các canvas ngầm */
+        canvas, #file-input { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>🌸 MY SWEET BOOTH 🌸</h1>
+    <p class="subtitle">Chụp ảnh và trang trí phong cách kẹo ngọt pastel cực đáng yêu</p>
+
+    <div class="main-wrapper">
+        <div class="controls-section">
+            <div id="preview-area">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="decoration-canvas"></canvas>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="capture-btn" class="btn-capture">📸 Chụp Liền</button>
+                <button id="upload-btn" class="btn-upload">📁 Tải Ảnh Lên</button>
+                <input type="file" id="file-input" accept="image/*">
+                <button id="reset-all-btn" class="btn-reset">🔄 Xóa Hết</button>
+            </div>
+
+            <div class="decoration-panel" id="decoration-panel">
+                <div class="decoration-tabs">
+                    <button class="decor-tab active-tab" data-tab="tab-filters">Màu Xinh</button>
+                    <button class="decor-tab" data-tab="tab-stickers">Stickers Cute</button>
+                </div>
+                
+                <div id="tab-filters" class="decoration-content active-content">
+                    <h4>Chọn hiệu ứng màu sắc:</h4>
+                    <div class="filters-buttons">
+                        <button class="btn-filter active-filter" data-filter="none">Mặc định</button>
+                        <button class="btn-filter" data-filter="vintage">🌸 Má Hồng Trộm</button>
+                        <button class="btn-filter" data-filter="sepia">🎞️ Cổ Điển</button>
+                        <button class="btn-filter" data-filter="grayscale">🖤 Trắng Đen</button>
+                        <button class="btn-filter" data-filter="vibrant">✨ Rực Rỡ</button>
+                    </div>
+                </div>
+                
+                <div id="tab-stickers" class="decoration-content">
+                    <h4>Bấm để dán lên ảnh nha:</h4>
+                    <div class="stickers-buttons">
+                        <button class="btn-sticker" data-sticker="heart">Yêu Thương ❤️</button>
+                        <button class="btn-sticker" data-sticker="smiley">Vui Vẻ 😊</button>
+                        <button class="btn-sticker" data-sticker="star">Lấp Lánh ⭐</button>
+                        <button class="btn-sticker" data-sticker="cat">Mèo Ú 🐱</button>
+                        <button class="btn-sticker" data-sticker="cloud">Mây Trắng ☁️</button>
+                    </div>
+                </div>
+
+                <button id="add-to-booth-btn" class="btn-add-decor">💖 Đẹp Rồi! Thêm Vào Khung</button>
+            </div>
+
+            <div class="status-bar">Đã gom được: <span id="count">0</span> / 4 em ảnh</div>
+            <button id="download-btn" class="btn-download">📥 Tải Khung Ảnh Xinh Về Máy</button>
+        </div>
+
+        <div class="booth-section">
+            <div class="photobooth-frame" id="booth-frame">
+                <div class="photo-slot" id="slot-0">Pic số 1 nè</div>
+                <div class="photo-slot" id="slot-1">Pic số 2 nè</div>
+                <div class="photo-slot" id="slot-2">Pic số 3 nè</div>
+                <div class="photo-slot" id="slot-3">Pic số 4 nè</div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="hidden-canvas"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const decorationCanvas = document.getElementById('decoration-canvas');
+        const dCtx = decorationCanvas.getContext('2d');
+        const captureBtn = document.getElementById('capture-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const decorationPanel = document.getElementById('decoration-panel');
+        const addToBoothBtn = document.getElementById('add-to-booth-btn');
+        const fileInput = document.getElementById('file-input');
+        const downloadBtn = document.getElementById('download-btn');
+        const resetAllBtn = document.getElementById('reset-all-btn');
+        const countSpan = document.getElementById('count');
+        
+        // Cấu hình kích thước ảnh chất lượng cao
+        const TARGET_W = 1000;
+        const TARGET_H = 750;
+        
+        let originalImageSrc = null; 
+        let currentFilter = 'none';
+        let currentStickers = []; 
+        let photoCount = 0;
+        const finalDecoratedImages = []; 
+
+        // 1. Kết nối với Webcam máy tính
+        navigator.mediaDevices.getUserMedia({ video: { width: TARGET_W, height: TARGET_H }, audio: false })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { 
+                alert("Hổng mở được Camera rồi, bạn đăng ảnh từ máy tính lên nha!"); 
+            });
+
+        // 2. Chuyển ảnh gốc sang chế độ Chỉnh Sửa / Trang Trí
+        function openEditorWithImage(src) {
+            originalImageSrc = src;
+            decorationPanel.style.display = 'block';
+            video.style.display = 'none';
+            decorationCanvas.style.display = 'block';
+            
+            // Reset các lựa chọn cũ
+            currentFilter = 'none';
+            currentStickers = [];
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active-filter'));
+            document.querySelector('[data-filter="none"]').classList.add('active-filter');
+            document.querySelectorAll('.btn-sticker').forEach(b => b.classList.remove('active-sticker'));
+
+            renderDecoratedPreview();
+        }
+
+        // 3. Hàm vẽ tích hợp Bộ lọc + Sticker cute lên canvas xem trước
+        function renderDecoratedPreview() {
+            if (!originalImageSrc) return;
+
+            decorationCanvas.width = TARGET_W;
+            decorationCanvas.height = TARGET_H;
+
+            const img = new Image();
+            img.src = originalImageSrc;
+            img.onload = () => {
+                // A. Áp dụng filter màu sắc cute
+                let filterString = '';
+                if (currentFilter === 'vintage') filterString += 'sepia(25%) saturate(150%) hue-rotate(-10deg) brightness(105%)';
+                if (currentFilter === 'sepia') filterString += 'sepia(80%) contrast(90%)';
+                if (currentFilter === 'grayscale') filterString += 'grayscale(100%) brightness(110%)';
+                if (currentFilter === 'vibrant') filterString += 'saturate(170%) brightness(105%)';
+                
+                dCtx.filter = filterString;
+                dCtx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
+                dCtx.filter = 'none'; // Trả về mặc định sau khi vẽ xong ảnh
+
+                // B. Vẽ các icon Sticker dễ thương bằng Emoji chữ lớn
+                dCtx.fillStyle = "#ffffff";
+                dCtx.textBaseline = "middle";
+                dCtx.textAlign = "center";
+
+                if (currentStickers.includes('heart')) {
+                    dCtx.font = "90px Quicksand, Segoe UI Symbol";
+                    dCtx.fillText("❤️", 880, 120);
+                    dCtx.fillText("💖", 120, TARGET_H - 120);
+                }
+                if (currentStickers.includes('smiley')) {
+                    dCtx.font = "90px Quicksand, Segoe UI Symbol";
+                    dCtx.fillText("😊", 130, 120);
+                }
+                if (currentStickers.includes('star')) {
+                    dCtx.font = "80px Quicksand, Segoe UI Symbol";
+                    dCtx.fillText("⭐", 880, TARGET_H - 140);
+                    dCtx.fillText("✨", 250, 100);
+                }
+                if (currentStickers.includes('cat')) {
+                    dCtx.font = "100px Quicksand, Segoe UI Symbol";
+                    dCtx.fillText("🐱", 860, TARGET_H - 120);
+                }
+                if (currentStickers.includes('cloud')) {
+                    dCtx.font = "100px Quicksand, Segoe UI Symbol";
+                    dCtx.fillText("☁️", 140, 140);
+                    dCtx.fillText("🌈", 500, 100);
+                }
+            };
+        }
+
+        // 4. Sự kiện Chụp ảnh từ camera
+        captureBtn.addEventListener('click', () => {
+            if (photoCount >= 4) return;
+            const hiddenCanvas = document.getElementById('hidden-canvas');
+            const hCtx = hiddenCanvas.getContext('2d');
+            hiddenCanvas.width = TARGET_W;
+            hiddenCanvas.height = TARGET_H;
+
+            // Vì video đang bị lật gương đối xứng, ta chụp lại ảnh thuận tự nhiên
+            hCtx.save();
+            hCtx.translate(TARGET_W, 0);
+            hCtx.scale(-1, 1);
+            hCtx.drawImage(video, 0, 0, TARGET_W, TARGET_H);
+            hCtx.restore();
+
+            openEditorWithImage(hiddenCanvas.toDataURL('image/jpeg', 0.95));
+        });
+
+        // 5. Sự kiện Tải ảnh từ thiết bị
+        uploadBtn.addEventListener('click', () => { if (photoCount < 4) fileInput.click(); });
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const hiddenCanvas = document.getElementById('hidden-canvas');
+                    const hCtx = hiddenCanvas.getContext('2d');
+                    hiddenCanvas.width = TARGET_W;
+                    hiddenCanvas.height = TARGET_H;
+
+                    // Cắt ảnh theo tỷ lệ cover 4:3 chuẩn
+                    let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+                    const aspectRatio = img.width / img.height;
+                    const targetRatio = TARGET_W / TARGET_H;
+                    if (aspectRatio > targetRatio) {
+                        drawHeight = TARGET_H;
+                        drawWidth = img.width * (TARGET_H / img.height);
+                        offsetX = (TARGET_W - drawWidth) / 2;
+                    } else {
+                        drawWidth = TARGET_W;
+                        drawHeight = img.height * (TARGET_W / img.width);
+                        offsetY = (TARGET_H - drawHeight) / 2;
+                    }
+                    hCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                    openEditorWithImage(hiddenCanvas.toDataURL('image/jpeg', 0.95));
+                };
+            };
+            reader.readAsDataURL(file);
+            fileInput.value = '';
+        });
+
+        // 6. Đổi tab trang trí (Màu xinh / Sticker)
+        document.querySelectorAll('.decor-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.decor-tab').forEach(t => t.classList.remove('active-tab'));
+                document.querySelectorAll('.decoration-content').forEach(c => c.classList.remove('active-content'));
+                tab.classList.add('active-tab');
+                document.getElementById(tab.dataset.tab).classList.add('active-content');
+            });
+        });
+
+        // 7. Chọn bộ lọc màu
+        document.querySelectorAll('.btn-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active-filter'));
+                btn.classList.add('active-filter');
+                currentFilter = btn.dataset.filter;
+                renderDecoratedPreview();
+            });
+        });
+
+        // 8. Chọn/Bỏ chọn Sticker dễ thương
+        document.querySelectorAll('.btn-sticker').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sticker = btn.dataset.sticker;
+                if (currentStickers.includes(sticker)) {
+                    currentStickers = currentStickers.filter(s => s !== sticker);
+                    btn.classList.remove('active-sticker');
+                } else {
+                    currentStickers.push(sticker);
+                    btn.classList.add('active-sticker');
+                }
+                renderDecoratedPreview();
+            });
+        });
+
+        // 9. Lưu ảnh đã trang trí xong vào khung 4 ô dọc
+        addToBoothBtn.addEventListener('click', () => {
+            if (photoCount >= 4 || !originalImageSrc) return;
+            
+            const decoratedDataURL = decorationCanvas.toDataURL('image/jpeg', 0.95);
+            
+            // Đổ hình vào ô tương ứng ở cột bên phải
+            const currentSlot = document.getElementById(`slot-${photoCount}`);
+            currentSlot.innerHTML = `<img src="${decoratedDataURL}" alt="Sweet Photo">`;
+            currentSlot.style.border = "none"; // Xóa viền nét đứt khi có ảnh
+
+            finalDecoratedImages.push(decoratedDataURL);
+            photoCount++;
+            countSpan.innerText = photoCount;
+
+            // Đóng bảng editor, khôi phục camera trực tiếp tiếp tục chụp tấm mới
+            decorationPanel.style.display = 'none';
+            video.style.display = 'block';
+            decorationCanvas.style.display = 'none';
+            originalImageSrc = null;
+
+            if (photoCount === 4) {
+                captureBtn.disabled = true;
+                uploadBtn.disabled = true;
+                downloadBtn.style.display = "flex"; // Hiện nút tải thành phẩm
+            }
+        });
+
+        // Nút reset trang web từ đầu
+        resetAllBtn.addEventListener('click', () => { location.reload(); });
+
+        // 10. Ghép toàn bộ 4 ảnh thành khung ảnh dọc dài và tự động tải xuống
+        downloadBtn.addEventListener('click', () => {
+            const finalCanvas = document.createElement('canvas');
+            const fCtx = finalCanvas.getContext('2d');
+
+            const imgW = 1000, imgH = 750, padding = 70, gap = 45, bottomSpace = 250;
+            finalCanvas.width = imgW + (padding * 2);
+            finalCanvas.height = (imgH * 4) + (gap * 3) + (padding * 2) + bottomSpace;
+
+            // Vẽ nền trắng tinh khôi cho khung hình
+            fCtx.fillStyle = "#ffffff"; 
+            fCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+            let loadedCount = 0;
+            finalDecoratedImages.forEach((src, index) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    const x = padding;
+                    const y = padding + index * (imgH + gap);
+                    fCtx.drawImage(img, x, y, imgW, imgH);
+                    
+                    loadedCount++;
+                    // Khi vẽ hoàn thành đủ cả 4 ảnh, tạo file tải xuống máy tính
+                    if (loadedCount === photoCount) {
+                        // Thêm chữ ký "mini booth" cute dưới đáy ảnh tải về giống giao diện web
+                        fCtx.fillStyle = "#ff8fab";
+                        fCtx.font = "bold 45px Quicksand, Arial";
+                        fCtx.textAlign = "center";
+                        fCtx.fillText("✨ MINI SWEET BOOTH ✨", finalCanvas.width / 2, finalCanvas.height - 100);
+
+                        const link = document.createElement('a');
+                        link.download = `sweet-booth-${Date.now()}.jpg`;
+                        link.href = finalCanvas.toDataURL('image/jpeg', 0.98);
+                        link.click();
+                    }
+                };
+            });
+        });
+    </script>
+</body>
+</html>
